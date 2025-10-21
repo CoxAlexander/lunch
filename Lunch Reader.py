@@ -1,6 +1,6 @@
 """
 Alexander Cox
-10/17/2025
+10/21/2025
 Goal make a working gui application that can take input from a barcode scanner and keyboard to accurately store the information for the 
 lunch room that can then be input into facts to store that information.
 
@@ -29,6 +29,7 @@ class gui:
         self.totalCost: float = 0
         self.currentList:list =[self.currentName, self.currentID, self.currentOrder, self.currentPrice, self.totalCost]
         self.catagories:list = menuWindow.categories
+        self.catList:list = []
 
         #GUI
         self.root = Tk()
@@ -66,7 +67,8 @@ class gui:
         #catagories 
         for cat in self.catagories:
             self.catLabel = Label(self.root,text=cat, font=("Times New Romans",15), borderwidth=1, relief=SOLID)
-            self.catLabel.place(relx=((self.counter)*0.1),rely=0.05+(floor(self.counterY/8)*0.1),relheight=0.05,relwidth=0.1)
+            self.catList.append(self.catLabel)
+            self.catList[self.counterY].place(relx=((self.counter)*0.1),rely=0.05+(floor(self.counterY/8)*0.1),relheight=0.05,relwidth=0.1)
             self.counter += 1
             self.counterY += 1
             if self.counter >= 8:
@@ -108,35 +110,29 @@ class gui:
 
 #a subclass of the main that has the menu and ability to change what the menu is
 class menuWindow():
-    categories: list = [1,2,3,4,5,6,7,8,9,10,"asdfghjklqwerty"]
+    categories: list = [1,2,3,4,5,6,7,8,9,10,11,12]
     #The menu gui settings that are different from main
     def __init__(self):
         
         #variables
         self.changes: bool = False
-        self.counter = 0
-        self.counterY = 0
+        self.counter:int = 0
+        self.counterY:int = 0
+        self.catList:list = []
+        self.catDelList:list = []
         self.root = Tk()
         self.root.title("Menu")
-        index = 0
+        self.index = 0
+
         #menu bar commands
         self.menuBar = Menu(self.root)
         self.root.config(menu=self.menuBar)
         self.file_menu = Menu(self.menuBar, tearoff=0)
         self.file_menu.add_command(label="Order", command=self.main)
         self.file_menu.add_command(label = 'Exit', command = self.exit)
-        self.menuBar.add_cascade(label="File", menu=self.file_menu)
-        
-        for cat in menuWindow.categories:
-            self.catTitle = Label(self.root, text=cat, font=("Times New Romans", 15),borderwidth=1, relief=SOLID)
-            self.catTitle.place(relx=(0.05+(self.counter)*0.1),rely=0.05+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
-            self.catDelete = Button(self.root,text="Delete", command =lambda: self.removeCategory(index))
-            self.catDelete.place(relx=(0.05+(self.counter)*0.1),rely=0.1+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
-            self.counter += 1
-            self.counterY += 1
-            index += 1
-            if self.counter >8:
-                self.counter =0
+        self.menuBar.add_cascade(label="File", menu=self.file_menu) 
+        self.load()
+       
         #screen size
         self.screenHeight:int = self.root.winfo_screenheight()
         self.screenWidth:int = self.root.winfo_screenwidth()
@@ -145,6 +141,9 @@ class menuWindow():
         #buttons
         self.addCatButton = Button(self.root, text="Add Category", command=self.addCategory)
         self.addCatButton.place(relx=0.1,rely=0.8,relheight=0.05,relwidth=0.05)
+
+        self.root.mainloop()
+
 
     #adds a category to the page
     def addCategory(self):
@@ -166,8 +165,12 @@ class menuWindow():
     def addCatConfirm(self):
         menuWindow.categories.append(self.catInput.get('1.0', 'end-1c'))
         self.addCatWindow.destroy()
-        self.catTitle = Label(self.root, text=menuWindow.categories[-1], font=("Times New Romans", 15))
-        self.catTitle.place(relx=((self.counter)*0.1),rely=0.05+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
+        self.catTitle = Label(self.root, text=menuWindow.categories[-1], font=("Times New Romans", 15),borderwidth=1, relief=SOLID)
+        self.catList.append(self.catTitle)
+        self.catList[self.counterY].place(relx=(0.05+(self.counter)*0.1),rely=0.05+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
+        self.catDelete = Button(self.root,text="Delete", command = lambda index = self.index: self.removeCategory(index=index))
+        self.catDelList.append(self.catDelete)
+        self.catDelList[self.counterY].place(relx=(0.05+(self.counter)*0.1),rely=0.1+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
         self.counterY += 1
         self.counter += 1
         if self.counter > 8:
@@ -185,6 +188,21 @@ class menuWindow():
         else:
             self.root.destroy()
 
+    #Load all the buttons
+    def load(self):
+        for cat in menuWindow.categories:
+            self.catTitle = Label(self.root, text=cat, font=("Times New Romans", 15),borderwidth=1, relief=SOLID)
+            self.catList.append(self.catTitle)
+            self.catList[self.counterY].place(relx=(0.05+(self.counter)*0.1),rely=0.05+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
+            self.catDelete = Button(self.root,text="Delete", command = lambda index = self.index: self.removeCategory(index=index))
+            self.catDelList.append(self.catDelete)
+            self.catDelList[self.counterY].place(relx=(0.05+(self.counter)*0.1),rely=0.1+(floor(self.counterY/9)*0.1),relheight=0.05,relwidth=0.1)
+            self.counter += 1
+            self.counterY += 1
+            self.index += 1
+            if self.counter >8:
+                self.counter =0
+
     #goes back to the main GUI menu
     def main(self):
         if (self.changes):
@@ -196,10 +214,19 @@ class menuWindow():
 
     #removes a category from the page
     def removeCategory(self,index):
-        print(index)
-        print(self.categories[10])
-        self.categories.remove(self.categories[index])
-        print(self.categories)
+        for x in range(0,len(menuWindow.categories)):
+            self.catList[x].destroy()
+            self.catDelList[x].destroy()
+            self.root.update() 
+        menuWindow.categories.pop(index)
+        self.index = 0
+        self.counter = 0
+        self.counterY = 0
+        self.catList = []
+        self.catDelList = []
+        self.load()
+
+    
 
     #removes a price from a category
     def removePrice(self):
